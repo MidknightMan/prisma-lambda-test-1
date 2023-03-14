@@ -1,0 +1,41 @@
+## TEMPLATE
+
+ame: IMAGE-BUILD
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: docker/build-push-action@v1
+        name: Build & push Docker image
+        with:
+          username: _json_key
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          dockerfile: docker/k8s/Dockerfile
+          registry: gcr.io
+          repository: isentropic-sun-309212/outwork-ms-template ## change this to be the correct repository
+          tag_with_sha: true
+          tags: latest
+      - uses: peter-evans/repository-dispatch@v1
+        name: Repository Dispatch
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: outwork-ri/outwork-devops
+          event-type: merge-develop-event-outwork-ms-template ## change this to be the correct merge event
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+
+      - uses: 8398a7/action-slack@v3
+        name: Send Slack Notification
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,author,action,eventName,ref,workflow,job
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always() # Pick up events even if the job fails or is canceled.

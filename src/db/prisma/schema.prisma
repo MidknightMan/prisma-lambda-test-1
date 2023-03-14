@@ -1,0 +1,17 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator gen {
+  provider = "prisma-client-js"
+}
+
+generator typegraphql {
+  provider = "typegraphql-prisma"
+}
+
+model Example {
+  id                    Int     @id @default(autoincrement())
+  name                  String
+}
